@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLADE — Barbershop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #0a0a0a;
+    --dark: #111111;
+    --card: #161616;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f5f0e8;
+    --gray: #888;
+    --white: #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease-out, width 0.3s, height 0.3s;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 60px;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.95), transparent);
+  }
+
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 6px;
+    color: var(--gold);
+  }
+
+  .nav-links {
+    display: flex; gap: 40px; list-style: none;
+  }
+  .nav-links a {
+    color: var(--gray);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 10px 24px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+  }
+  .nav-cta:hover {
+    background: var(--gold);
+    color: var(--black);
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 60px 80px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 10vw, 140px);
+    line-height: 0.9;
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title span {
+    display: block;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(201,168,76,0.4);
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--gold);
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--gray);
+    line-height: 1.8;
+    max-width: 380px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 40px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+
+  .btn-ghost {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--white);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    cursor: none;
+    transition: color 0.3s;
+  }
+  .btn-ghost:hover { color: var(--gold); }
+  .btn-ghost-arrow {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  .btn-ghost:hover .btn-ghost-arrow { border-color: var(--gold); }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 64px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    opacity: 0;
+    animation: fadeUp 0.8s 1s forwards;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--gray);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-image-wrap {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1410 0%, #0d0d0d 100%);
+  }
+
+  .hero-image-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 30% 50%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 30px,
+        rgba(201,168,76,0.02) 30px,
+        rgba(201,168,76,0.02) 31px
+      );
+  }
+
+  .hero-barber-visual {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .barber-icon {
+    font-size: 180px;
+    opacity: 0.06;
+    transform: rotate(-15deg);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hero-badge {
+    position: absolute;
+    bottom: 80px;
+    left: 40px;
+    background: var(--card);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 20px 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s 1.2s forwards;
+  }
+
+  .badge-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: var(--cream);
+    line-height: 1.5;
+  }
+
+  .badge-since {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .hero-decor-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  /* MARQUEE */
+  .marquee-wrap {
+    background: var(--gold);
+    padding: 14px 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 0;
+    animation: marquee 20s linear infinite;
+    white-space: nowrap;
+  }
+
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--black);
+  }
+
+  .marquee-dot {
+    width: 5px; height: 5px;
+    background: var(--black);
+    border-radius: 50%;
+    opacity: 0.4;
+  }
+
+  /* SERVICES */
+  .services {
+    padding: 120px 60px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 64px;
+  }
+
+  .section-tag {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--gold);
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 72px);
+    line-height: 0.95;
+    letter-spacing: 1px;
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.8;
+    max-width: 280px;
+    text-align: right;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .service-card {
+    background: var(--card);
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s;
+    cursor: none;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+    transform-origin: left;
+  }
+
+  .service-card:hover { background: #1c1c1c; }
+  .service-card:hover::before { transform: scaleX(1); }
+
+  .service-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    color: rgba(201,168,76,0.08);
+    line-height: 1;
+    margin-bottom: 24px;
+    transition: color 0.4s;
+  }
+
+  .service-card:hover .service-num { color: rgba(201,168,76,0.15); }
+
+  .service-icon { font-size: 28px; margin-bottom: 16px; }
+
+  .service-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    transition: color 0.3s;
+  }
+
+  .service-card:hover .service-name { color: var(--gold); }
+
+  .service-desc {
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+
+  .service-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .service-price span {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--gray);
+    letter-spacing: 0;
+  }
+
+  /* MASTERS */
+  .masters {
+    padding: 120px 60px;
+    background: var(--dark);
+    position: relative;
+    z-index: 2;
+  }
+
+  .masters-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+  }
+
+  .master-card {
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  .master-photo {
+    aspect-ratio: 3/4;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .master-photo-bg {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.6s ease;
+  }
+
+  .master-card:hover .master-photo-bg { transform: scale(1.05); }
+
+  .master-avatar {
+    font-size: 80px;
+    position: relative;
+    z-index: 1;
+    opacity: 0.3;
+  }
+
+  .master-gradient {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60%;
+    background: linear-gradient(to top, var(--black), transparent);
+    z-index: 2;
+  }
+
+  .master-info {
+    padding: 20px 0;
+  }
+
+  .master-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .master-role {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .master-exp {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 8px;
+  }
+
+  /* BOOKING */
+  .booking {
+    padding: 120px 60px;
+    position: relative;
+    z-index: 2;
+    background: 
+      radial-gradient(circle at 70% 50%, rgba(201,168,76,0.05) 0%, transparent 60%),
+      var(--black);
+  }
+
+  .booking-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .booking-text .section-title {
+    margin-bottom: 24px;
+  }
+
+  .booking-features {
+    list-style: none;
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .booking-feature {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--gray);
+  }
+
+  .feature-check {
+    width: 24px; height: 24px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .booking-form {
+    background: var(--card);
+    padding: 48px 40px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 32px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+
+  .form-input, .form-select {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--white);
+    padding: 14px 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.3s;
+    cursor: none;
+    appearance: none;
+  }
+
+  .form-input:focus, .form-select:focus {
+    border-color: var(--gold);
+  }
+
+  .form-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .form-select option { background: var(--dark); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .btn-book {
+    width: 100%;
+    background: var(--gold);
+    color: var(--black);
+    padding: 18px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border: none;
+    cursor: none;
+    margin-top: 8px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-book:hover { background: var(--gold-light); }
+
+  /* TESTIMONIALS */
+  .testimonials {
+    padding: 120px 60px;
+    background: var(--dark);
+    position: relative;
+    z-index: 2;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 64px;
+  }
+
+  .testimonial-card {
+    background: var(--black);
+    padding: 40px 36px;
+    position: relative;
+  }
+
+  .testimonial-quote {
+    font-size: 48px;
+    color: var(--gold);
+    opacity: 0.3;
+    line-height: 1;
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 16px;
+  }
+
+  .testimonial-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--cream);
+    margin-bottom: 24px;
+  }
+
+  .testimonial-stars {
+    color: var(--gold);
+    font-size: 14px;
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+
+  .testimonial-author {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .testimonial-date {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--black);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 80px 60px 40px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+  }
+
+  .footer-brand .nav-logo {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.8;
+    max-width: 280px;
+  }
+
+  .footer-heading {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-links a {
+    color: var(--gray);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.3s;
+  }
+
+  .footer-links a:hover { color: var(--white); }
+
+  .footer-contact-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--gray);
+  }
+
+  .contact-icon { color: var(--gold); }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 12px;
+    color: var(--gray);
+  }
+
+  .social-links {
+    display: flex;
+    gap: 16px;
+  }
+
+  .social-link {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s;
+    cursor: none;
+    text-decoration: none;
+    color: var(--gray);
+  }
+
+  .social-link:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: rotate(-15deg) translateY(0); }
+    50% { transform: rotate(-15deg) translateY(-20px); }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; min-height: auto; }
+    .hero-left { padding: 100px 24px 60px; }
+    .hero-right { height: 300px; }
+    .services, .masters, .booking, .testimonials { padding: 80px 24px; }
+    .services-grid, .masters-grid, .testimonials-grid { grid-template-columns: 1fr; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .section-desc { text-align: left; }
+    .booking-inner { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr; }
+    footer { padding: 60px 24px 32px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+    .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+    .hero-stats { flex-wrap: wrap; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">BLADE</div>
+  <ul class="nav-links">
+    <li><a href="#services">Услуги</a></li>
+    <li><a href="#masters">Мастера</a></li>
+    <li><a href="#booking">Записаться</a></li>
+    <li><a href="#reviews">Отзывы</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">Записаться</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-tag">Премиальный барбершоп · Москва</div>
+    <h1 class="hero-title">
+      ТВОЙ<br>
+      <em>СТИЛЬ</em><br>
+      <span>ТВОИ</span><br>
+      ПРАВИЛА
+    </h1>
+    <p class="hero-sub">Место где мастерство встречает характер. Классические стрижки, современные техники, безупречный результат.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">Записаться сейчас</button>
+      <div class="btn-ghost" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">
+        <span>Услуги и цены</span>
+        <div class="btn-ghost-arrow">→</div>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">7+</div>
+        <div class="stat-label">Лет опыта</div>
+      </div>
+      <div>
+        <div class="stat-num">4К+</div>
+        <div class="stat-label">Клиентов</div>
+      </div>
+      <div>
+        <div class="stat-num">98%</div>
+        <div class="stat-label">Довольных</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-image-wrap">
+      <div class="hero-barber-visual">
+        <div class="barber-icon">✂</div>
+      </div>
+    </div>
+    <div class="hero-decor-line"></div>
+    <div class="hero-badge">
+      <div class="badge-text">"Настоящий мужской стиль<br>начинается здесь"</div>
+      <div class="badge-since">— Since 2017</div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">КЛАССИЧЕСКИЕ СТРИЖКИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ОФОРМЛЕНИЕ БОРОДЫ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ГОРЯЧЕЕ БРИТЬЁ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">УХОД ЗА ВОЛОСАМИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ДЕТСКИЕ СТРИЖКИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ПРОФЕССИОНАЛЬНЫЕ МАСТЕРА <span class="marquee-dot"></span></span>
+    <span class="marquee-item">КЛАССИЧЕСКИЕ СТРИЖКИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ОФОРМЛЕНИЕ БОРОДЫ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ГОРЯЧЕЕ БРИТЬЁ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">УХОД ЗА ВОЛОСАМИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ДЕТСКИЕ СТРИЖКИ <span class="marquee-dot"></span></span>
+    <span class="marquee-item">ПРОФЕССИОНАЛЬНЫЕ МАСТЕРА <span class="marquee-dot"></span></span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-tag">Что мы делаем</div>
+      <h2 class="section-title">НАШИ<br>УСЛУГИ</h2>
+    </div>
+    <p class="section-desc">Каждая услуга — это ритуал. Мы не просто стрижём, мы создаём образ.</p>
+  </div>
+
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-num">01</div>
+      <div class="service-icon">✂️</div>
+      <div class="service-name">Классическая стрижка</div>
+      <div class="service-desc">Безупречная техника, проверенная временем. Машинка, ножницы, финальный стайлинг — всё включено.</div>
+      <div class="service-price">от 1 200 <span>₽</span></div>
+    </div>
+
+    <div class="service-card reveal">
+      <div class="service-num">02</div>
+      <div class="service-icon">🪒</div>
+      <div class="service-name">Горячее бритьё</div>
+      <div class="service-desc">Традиционное бритьё опасной бритвой с горячим полотенцем и восстанавливающими маслами.</div>
+      <div class="service-price">от 800 <span>₽</span></div>
+    </div>
+
+    <div class="service-card reveal">
+      <div class="service-num">03</div>
+      <div class="service-icon">🧔</div>
+      <div class="service-name">Оформление бороды</div>
+      <div class="service-desc">Точная геометрия, чёткие линии, правильная форма под ваш тип лица.</div>
+      <div class="service-price">от 700 <span>₽</span></div>
+    </div>
+
+    <div class="service-card reveal">
+      <div class="service-num">04</div>
+      <div class="service-icon">👑</div>
+      <div class="service-name">Комплекс Luxe</div>
+      <div class="service-desc">Стрижка + борода + горячее бритьё + уход. Полный ритуал для настоящего джентльмена.</div>
+      <div class="service-price">от 2 500 <span>₽</span></div>
+    </div>
+
+    <div class="service-card reveal">
+      <div class="service-num">05</div>
+      <div class="service-icon">💆</div>
+      <div class="service-name">Уход за волосами</div>
+      <div class="service-desc">Профессиональные маски, масла и процедуры для здоровья и блеска волос.</div>
+      <div class="service-price">от 900 <span>₽</span></div>
+    </div>
+
+    <div class="service-card reveal">
+      <div class="service-num">06</div>
+      <div class="service-icon">👦</div>
+      <div class="service-name">Детская стрижка</div>
+      <div class="service-desc">Аккуратно, быстро и весело. Создадим стрижку которая понравится и ребёнку и родителям.</div>
+      <div class="service-price">от 700 <span>₽</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- MASTERS -->
+<section class="masters" id="masters">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-tag">Команда</div>
+      <h2 class="section-title">НАШИ<br>МАСТЕРА</h2>
+    </div>
+    <p class="section-desc">Каждый мастер — профессионал с опытом от 5 лет и постоянным обучением.</p>
+  </div>
+
+  <div class="masters-grid">
+    <div class="master-card reveal">
+      <div class="master-photo">
+        <div class="master-photo-bg" style="background: linear-gradient(135deg, #1a1410, #2a1f0f);"></div>
+        <div class="master-avatar">👨‍🦱</div>
+        <div class="master-gradient"></div>
+      </div>
+      <div class="master-info">
+        <div class="master-name">Александр Громов</div>
+        <div class="master-role">Senior Barber</div>
+        <div class="master-exp">8 лет опыта · 1200+ клиентов</div>
+      </div>
+    </div>
+
+    <div class="master-card reveal">
+      <div class="master-photo">
+        <div class="master-photo-bg" style="background: linear-gradient(135deg, #0f1a14, #0f1f1a);"></div>
+        <div class="master-avatar">🧑‍🦲</div>
+        <div class="master-gradient"></div>
+      </div>
+      <div class="master-info">
+        <div class="master-name">Дмитрий Волков</div>
+        <div class="master-role">Master Barber</div>
+        <div class="master-exp">6 лет опыта · 900+ клиентов</div>
+      </div>
+    </div>
+
+    <div class="master-card reveal">
+      <div class="master-photo">
+        <div class="master-photo-bg" style="background: linear-gradient(135deg, #160f1a, #1a0f1f);"></div>
+        <div class="master-avatar">👨‍🦰</div>
+        <div class="master-gradient"></div>
+      </div>
+      <div class="master-info">
+        <div class="master-name">Иван Чернов</div>
+        <div class="master-role">Barber</div>
+        <div class="master-exp">5 лет опыта · 700+ клиентов</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKING -->
+<section class="booking" id="booking">
+  <div class="booking-inner">
+    <div class="booking-text reveal">
+      <div class="section-tag">Запись</div>
+      <h2 class="section-title">ЗАПИШИСЬ<br>ОНЛАЙН</h2>
+      <p style="font-size:14px; color:var(--gray); line-height:1.8; margin-top:16px;">Займи свой слот у любимого мастера. Без очередей, без ожидания — только ты и твой стиль.</p>
+      <ul class="booking-features">
+        <li class="booking-feature">
+          <div class="feature-check">✓</div>
+          Подтверждение за 5 минут
+        </li>
+        <li class="booking-feature">
+          <div class="feature-check">✓</div>
+          Напоминание за день до визита
+        </li>
+        <li class="booking-feature">
+          <div class="feature-check">✓</div>
+          Бесплатная отмена за 2 часа
+        </li>
+        <li class="booking-feature">
+          <div class="feature-check">✓</div>
+          Накопительная скидка для постоянных клиентов
+        </li>
+      </ul>
+    </div>
+
+    <div class="booking-form reveal">
+      <div class="form-title">Оставить заявку</div>
+      <div class="form-group">
+        <label class="form-label">Ваше имя</label>
+        <input class="form-input" type="text" placeholder="Алексей">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Телефон</label>
+        <input class="form-input" type="tel" placeholder="+7 (999) 000-00-00">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Услуга</label>
+          <select class="form-select">
+            <option>Стрижка</option>
+            <option>Горячее бритьё</option>
+            <option>Борода</option>
+            <option>Комплекс Luxe</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Мастер</label>
+          <select class="form-select">
+            <option>Александр</option>
+            <option>Дмитрий</option>
+            <option>Иван</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Дата</label>
+          <input class="form-input" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Время</label>
+          <select class="form-select">
+            <option>10:00</option>
+            <option>11:00</option>
+            <option>12:00</option>
+            <option>13:00</option>
+            <option>14:00</option>
+            <option>15:00</option>
+            <option>16:00</option>
+            <option>17:00</option>
+            <option>18:00</option>
+            <option>19:00</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-book" onclick="this.textContent='✓ Заявка отправлена!'; this.style.background='#2a5c3f'">Записаться</button>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials" id="reviews">
+  <div class="section-header reveal">
+    <div>
+      <div class="section-tag">Отзывы</div>
+      <h2 class="section-title">ЧТО<br>ГОВОРЯТ</h2>
+    </div>
+    <p class="section-desc">Реальные отзывы реальных клиентов.</p>
+  </div>
+
+  <div class="testimonials-grid">
+    <div class="testimonial-card reveal">
+      <div class="testimonial-quote">"</div>
+      <div class="testimonial-text">Хожу уже 3 года к Александру. Лучшее место в городе — и стрижка, и атмосфера, и кофе пока ждёшь. Никуда не уйду.</div>
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-author">Михаил К.</div>
+      <div class="testimonial-date">Постоянный клиент · 3 года</div>
+    </div>
+
+    <div class="testimonial-card reveal">
+      <div class="testimonial-quote">"</div>
+      <div class="testimonial-text">Впервые попробовал горячее бритьё — это другой уровень. Кожа идеальная, ощущения незабываемые. Теперь только так.</div>
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-author">Артём Р.</div>
+      <div class="testimonial-date">Первый визит стал регулярным</div>
+    </div>
+
+    <div class="testimonial-card reveal">
+      <div class="testimonial-quote">"</div>
+      <div class="testimonial-text">Приходили с сыном на детскую стрижку. Дима нашёл подход к ребёнку моментально — всё прошло спокойно и быстро. Спасибо!</div>
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-author">Сергей Н.</div>
+      <div class="testimonial-date">Отец двух сыновей</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="nav-logo">BLADE</span>
+      <p>Премиальный барбершоп в самом сердце города. Работаем с 2017 года, чтобы каждый мужчина выглядел и чувствовал себя лучшей версией себя.</p>
+    </div>
+
+    <div>
+      <div class="footer-heading">Услуги</div>
+      <ul class="footer-links">
+        <li><a href="#">Классическая стрижка</a></li>
+        <li><a href="#">Горячее бритьё</a></li>
+        <li><a href="#">Оформление бороды</a></li>
+        <li><a href="#">Комплекс Luxe</a></li>
+        <li><a href="#">Детские стрижки</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-heading">Компания</div>
+      <ul class="footer-links">
+        <li><a href="#">О нас</a></li>
+        <li><a href="#">Мастера</a></li>
+        <li><a href="#">Акции</a></li>
+        <li><a href="#">Отзывы</a></li>
+        <li><a href="#">Франшиза</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-heading">Контакты</div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">📍</span>
+        <span>ул. Арбат, 24, Москва</span>
+      </div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">📞</span>
+        <span>+7 (495) 000-00-00</span>
+      </div>
+      <div class="footer-contact-item">
+        <span class="contact-icon">⏰</span>
+        <span>Пн–Вс: 10:00 – 21:00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2024 BLADE Barbershop. Все права защищены.</span>
+    <div class="social-links">
+      <a class="social-link" href="#">VK</a>
+      <a class="social-link" href="#">TG</a>
+      <a class="social-link" href="#">WA</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
